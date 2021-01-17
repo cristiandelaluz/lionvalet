@@ -1,0 +1,104 @@
+// Variables
+@import 'variables';
+
+h1, h2 {
+  font-weight: 900 !important;
+}
+
+h3, h4 {
+  font-weight: 800 !important;
+}
+
+button {
+  font-weight: 700 !important;
+  border-radius: 1.5rem !important;
+  padding: 0.8rem 2.2rem !important;
+}
+
+.section__content {
+  padding-top: 5.5rem !important;
+}
+
+.bg-primary-400 {
+  background: $primary-400;
+}
+
+.bg-primary-200 {
+  background: $primary-200;
+}
+
+.bg-primary-100 {
+  background: $primary-100;
+}
+
+.bg-primary-light {
+  background: $primary-light;
+}
+
+.text-primary-400 {
+  color: $primary-400;
+}
+
+.text-primary-200 {
+  color: $primary-200;
+}
+
+.text-primary-100 {
+  color: $primary-100;
+}
+
+.text-primary-light {
+  color: $primary-light;
+}
+
+.lionvalet-main-text {
+  color: #212529;
+  font-size: 15rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+}
+
+.card {
+  border-radius: 2.2rem !important;
+}
+
+.card-header {
+  border-top-right-radius: 2.2rem !important;
+  border-top-left-radius: 2.2rem !important;
+  padding: 1.5rem 2rem !important
+}
+
+.card-body {
+  padding: 2rem !important;
+}
+
+.form-control, select.custom-select {
+  border-radius: 1rem !important;
+}
+
+// input.form-control, select.form-control {
+//   height: calc(1.6em + 1.2rem + 2px) !important;
+// }
+
+.form-group {
+  label {
+    font-size: 85%;
+    margin-left: 0.5rem;
+  }
+}
+
+.sticky-element {
+  position: -webkit-sticky !important; /* Safari */
+  position: sticky !important;
+  top: 0;
+}
+
+.b-form-datepicker, .b-form-timepicker {
+  button {
+    padding: 0.375rem 0.75rem !important;
+  }
+}
+
+// Bootstrap
+@import '~bootstrap/scss/bootstrap';
+@import 'node_modules/bootstrap-vue/src/index.scss';
