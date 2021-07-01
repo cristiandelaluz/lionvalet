@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-md fixed-top navbar-light bg-white shadow-sm">
     <div class="container">
         <a class="navbar-brand font-weight-bold" href="{{ url('/') }}" style="font-size: 1.3rem;">
-            <img src="{{ asset('assets/lion.svg') }}" class="mr-1" height="30px" alt="">
+            {{-- <img src="{{ asset('assets/lion.svg') }}" class="mr-1" height="30px" alt=""> --}}
             {{ config('app.name', 'Laravel') }}
         </a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
@@ -11,26 +11,24 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <!-- Left Side Of Navbar -->
             <ul class="navbar-nav mr-auto">
-                {{-- @guest
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Services</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Pricing</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
-                    </li>
-                @endguest --}}
+                @guest
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('reservation') }}">Réserver</a>
                 </li>
+                @endguest
                 @auth
+                    @role('client')
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('reservation') }}">Réserver</a>
+                    </li>
+                    @endrole
+                    @role('admin')
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('clients.index') }}">Clients</a>
                     </li>
+                    @endrole
                     <li class="nav-item">
-                        <a class="nav-link">Réservations</a>
+                        <a class="nav-link" href="{{ route('reservations.index') }}">Mes Réservations</a>
                     </li>
                 @endauth
             </ul>
@@ -41,11 +39,11 @@
                 <!-- Authentication Links -->
                 @guest
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                        <a class="nav-link" href="{{ route('login') }}">Se connecter</a>
                     </li>
                     @if (Route::has('register'))
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('register') }}">{{ __('Register') }}</a>
+                            <a class="nav-link" href="{{ route('register') }}">S'inscrire</a>
                         </li>
                     @endif
                 @else
@@ -58,7 +56,7 @@
                             <a class="dropdown-item" href="{{ route('logout') }}"
                                onclick="event.preventDefault();
                                              document.getElementById('logout-form').submit();">
-                                {{ __('Logout') }}
+                                Finaliser la connexion
                             </a>
 
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">

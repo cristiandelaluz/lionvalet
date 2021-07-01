@@ -2,34 +2,40 @@
     <fragment>
         <div class="col-md-12 col-lg-9 mb-3">
             <reservation-form
-                ref="reservationForm"
-                @departure-ok="departureOk"
-                @arrival-ok="arrivalOk" />
+                ref="reservationForm" />
             <reservation-services
-                :services="services"
-                @addToCart="addToCart" 
-                @removeToCart="removeToCart" />
+                :services="services" />
         </div>
         <div class="col-md-12 col-lg-3">
             <div class="sticky-element" style="top: 5rem;">
                 <div class="card border-0 shadow">
                     <div class="card-header text-center bg-secondary text-white border-bottom-0">
                         <h5 class="m-0 font-weight-bold">Récapitulatif</h5>
+                        <small v-if="daysNumber">pour {{ daysNumber }} {{ daysNumber > 1 ? 'jours' : 'jour' }}</small>
                     </div>
                     <div class="card-body p-3 text-center">
                         <div class="card border-info mb-3" style="border-radius: 1rem !important;">
-                            <div class="card-body px-3 py-1">
-                                <p class="small font-weight-bold text-primary mb-1">PARKING + VOITURIER</p>
-                                <p class="mb-1">Bordo</p>
-                                <p class="mb-0">Bordo</p>
-                                <hr class="border-info my-2" />
-                                <p class="m-0 font-weight-bold text-primary">{{ priceForStay }} €</p>
+                            <div class="card-body px-3 py-2">
+                                <p class="m-0 font-weight-bold text-primary">Votre trajet</p>
+                                <div v-if="departure && arrival">
+                                    <p class="small font-weight-bold text-secondary mb-1">PARKING + VOITURIER</p>
+                                    <p class="mb-1">{{ departure.place }} <i v-if="departureOnNigth" class="fas fa-moon"></i></p>
+                                    <span class="my-3 h5 text-secondary"><i class="fas fa-arrow-down"></i></span>
+                                    <p class="mb-0">{{ arrival.place }} <i v-if="arrivalOnNigth" class="fas fa-moon"></i></p>
+                                    <hr class="border-info my-2" />
+                                    <p class="m-0 font-weight-bold text-secondary">Total: {{ totalParking }} €</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="card border-info" style="border-radius: 1rem !important;">
-                            <div class="card-body p-3">
-                                <h5>Vos options</h5>
+                        <div v-if="selectedServices.length" class="card border-info" style="border-radius: 1rem !important;">
+                            <div class="card-body p-2">
+                                <p class="m-0 font-weight-bold text-primary">Vos options</p>
+                                <div v-if="selectedServices.length">
+                                    <p class="m-0" v-for="service of selectedServices" :key="service.id">{{ service.name }}</p>
+                                    <hr class="border-info my-2" />
+                                    <p class="m-0 font-weight-bold text-secondary">Total: {{ totalServices }} €</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -37,7 +43,7 @@
                 <div class="card border-0 mt-3 shadow">
                     <div class="card-body">
                         <h6>Montant Total</h6>
-                        <h3 id="bill-total" class="text-secondary text-center m-0">{{ total }} €</h3>
+                        <h3 id="bill-total" class="text-secondary text-center m-0">{{ totalServices + totalParking }} €</h3>
                     </div>
                 </div>
                 <div class="text-center">
@@ -51,11 +57,11 @@
 </template>
 
 <script>
-    import {
-        Fragment
-    } from 'vue-fragment';
+    import { mapGetters } from 'vuex';
+    import { Fragment } from 'vue-fragment';
     import ReservationForm from './reservation/ReservartionForm';
     import ReservationServices from './reservation/ReservationServices';
+    import { parkingPrice, regularPrice, nigthPrice } from '../constants';
     import moment from 'moment';
 
     export default {
@@ -69,46 +75,101 @@
                 type: Array,
                 default: () => [],
             },
+            isAuth: {
+                type: Number,
+                default: 0,
+            },
         },
         data: () => ({
-            total: 0,
-            selectedServices: [],
-            departureDate: null,
-            arrivalDate: null,
             daysNumber: 0,
-            priceForStay: 0,
+            totalParking: 0,
+            departureOnNigth: false,
+            arrivalOnNigth: false,
         }),
-        methods: {
-            addToCart(id) {
-                this.total += this.services.find(x => x.id === id).price;
-            },
-            removeToCart(id) {
-                this.total -= this.services.find(x => x.id === id).price;
-            },
-            departureOk(date) {
-                this.departureDate = date;
-            },
-            arrivalOk(date) {
-                this.arrivalDate = date;
-            },
-            submit() {
-                this.$refs.reservationForm.submitNow();
+        computed: {
+            ...mapGetters('reservation', ['selectedServices', 'departure', 'arrival', 'dateAreReady']),
+            totalServices() {
+                return this.selectedServices.reduce((counter, current) => {
+                    return counter + current.price;
+                }, 0);
             }
         },
-        watch: {
-            arrivalDate() {
-                if (this.departureDate) {
-                    const departure = moment(this.departureDate);
-                    const arrival = moment(this.arrivalDate);
+        methods: {
+            async submit() {
+                const validated = await this.$refs.reservationForm.submitNow();
+                if (!validated) {
+                    return;
+                }
+
+                const quoteFormData = JSON.parse(localStorage.getItem('quoteFormData'));
+                quoteFormData.services = this.selectedServices.map(s => s.id);
+
+                if (!this.isAuth) {
+                    localStorage.setItem('pendingQuote', true);
+                    localStorage.setItem('quoteFormData', JSON.stringify(quoteFormData));
+                    window.location.href = '/login';
+                    return;
+                }
+
+                window.axios.post('/reservations', quoteFormData).then(() => {
+                    localStorage.setItem('pendingQuote', false);
+                    localStorage.removeItem('quote');
+                    localStorage.removeItem('quoteFormData');
+                    window.location.href = '/reservations';
+                });
+            },
+            getTotal() {
+                if (this.departure && this.arrival) {
+                    const departure = moment(this.departure.date);
+                    const arrival = moment(this.arrival.date);
+                    this.departureOnNigth = false;
+                    this.arrivalOnNigth = false;
 
                     this.daysNumber = arrival.diff(departure, 'days');
 
-                    if (this.priceForStay > 0) {
-                        this.total -= this.priceForStay;
+                    if (this.daysNumber <= 0) {
+                        this.daysNumber = 1;
                     }
 
-                    this.priceForStay = this.daysNumber * 59;
-                    this.total += this.priceForStay;
+                    this.totalParking = parkingPrice * this.daysNumber + regularPrice;
+
+                    // time
+                    const departureHourSplitted = this.departure.hour.split(':');
+                    const arrivalHourSplitted = this.arrival.hour.split(':');
+
+                    if (departureHourSplitted[0] >= 0 && departureHourSplitted[0] <= 6) {
+                        this.totalParking += nigthPrice - regularPrice;
+                        this.departureOnNigth = true;
+
+                        if (departureHourSplitted[0] == 6 && departureHourSplitted[1] > 0) {
+                            this.totalParking -= nigthPrice;
+                            this.totalParking += regularPrice;
+                            this.departureOnNigth = false;
+                        }
+                    }
+
+                    if (arrivalHourSplitted[0] >= 0 && arrivalHourSplitted[0] <= 6 && arrivalHourSplitted[1] < 1) {
+                        this.totalParking += nigthPrice - regularPrice;
+                        this.arrivalOnNigth = true;
+
+                        if (arrivalHourSplitted[0] == 6 && arrivalHourSplitted[1] > 0) {
+                            this.totalParking -= nigthPrice;
+                            this.totalParking += regularPrice;
+                            this.arrivalOnNigth = false;
+                        }
+                    }
+                }
+            }
+        },
+        watch: {
+            arrival() {
+                if (this.dateAreReady) {
+                    this.getTotal();
+                }
+            },
+            departure() {
+                if (this.dateAreReady) {
+                    this.getTotal();
                 }
             }
         }

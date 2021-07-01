@@ -99,6 +99,22 @@ button {
   }
 }
 
+.card-header {
+  padding-bottom: 0 !important;
+}
+
+.modal-header {
+  border-bottom: 0 !important;
+  justify-content: center !important;
+  .modal-title {
+    font-weight: bold !important;
+  }
+}
+
+.modal-footer {
+  border-top: 0 !important;
+}
+
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
 @import 'node_modules/bootstrap-vue/src/index.scss';

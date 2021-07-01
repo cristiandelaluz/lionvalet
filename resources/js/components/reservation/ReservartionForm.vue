@@ -1,7 +1,7 @@
 <template>
   <div class="card border-0 shadow">
     <div class="card-header text-center bg-white border-bottom-0">
-        <h4>
+        <h4 class="m-0">
             <i class="fas fa-calendar-day text-primary mr-3"></i>
             Votre Réservation
         </h4>
@@ -9,8 +9,7 @@
 
     <div class="card-body">
         <validation-observer ref="formObserver">
-            <form action="/clients/reserve" method="post" ref="form" id="formObserver">
-                <input type="hidden" name="_token" id="csrf-token" :value="csrfToken" />
+            <form>
                 <div class="row">
                     <div class="col-md-3 text-center">
                         <h3 class="text-primary"><i class="fas fa-plane-departure"></i></h3>
@@ -46,6 +45,8 @@
                                             v-model="departure_date"
                                             placeholder="Aucune date sélectionnée"
                                             today-button
+                                            :min="today"
+                                            :max="maxDepartDate"
                                             locale="fr"
                                             name="departure_date">
                                         </b-form-datepicker>
@@ -110,6 +111,7 @@
                                             v-model="arrival_date"
                                             placeholder="Aucune date sélectionnée"
                                             today-button
+                                            :min="minArrrivalDate"
                                             locale="fr"
                                             name="arrival_date">
                                         </b-form-datepicker>
@@ -146,66 +148,112 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+import { formData } from '../../constants';
+
 export default {
     data: () => ({
-        departure_place: null,
-        departure_meeting_point: null,
-        departure_date: null,
-        departure_hour: null,
-        departure_ticket_number: null,
-        arrival_place: null,
-        arrival_meeting_point: null,
-        arrival_date: null,
-        arrival_hour: null,
-        arrival_ticket_number: null,
-        stations: [
-            'Bordeaux Gare Saint Jean',
-            'Bordeaux Merignac Aeroport'
-        ],
-        meetingPoints: [
-            'Dépose minutes P1',
-            'Parking Express'
-        ],
+        ...formData
     }),
-    updated() {
-        if (this.departure_place && this.departure_date) {
-            this.$emit('departure-ok', this.departure_date);
-        }
+    created() {
+        const form = localStorage.getItem('quote');
 
-        if (this.arrival_place && this.arrival_date) {
-            this.$emit('arrival-ok', this.arrival_date);
+        if (form) {
+            const content = JSON.parse(form);
+            this.departure_place = content.departure_place;
+            this.departure_meeting_point = content.departure_meeting_point;
+            this.departure_date = content.departure_date;
+            this.departure_hour = content.departure_hour;
+            this.departure_ticket_number = content.departure_ticket_number,
+            this.arrival_place = content.arrival_place;
+            this.arrival_meeting_point = content.arrival_meeting_point;
+            this.arrival_date = content.arrival_date;
+            this.arrival_hour = content.arrival_hour;
+            this.arrival_ticket_number = content.arrival_ticket_number;
         }
     },
     computed: {
-        csrfToken() {
-            return document.getElementById('csrf-token').getAttribute('content');
+        today() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        },
+        minArrrivalDate() {
+            if (!this.departure_date) {
+                return this.today;
+            }
+
+            const splittedDate = this.departure_date.split('-');
+
+            return new Date(parseInt(splittedDate[0]), parseInt(splittedDate[1]) - 1, parseInt(splittedDate[2]));
+        },
+        maxDepartDate() {
+            if (!this.arrival_date) {
+                return null;
+            }
+
+            const splittedDate = this.arrival_date.split('-');
+
+            return new Date(parseInt(splittedDate[0]), parseInt(splittedDate[1]) - 1, parseInt(splittedDate[2]));
         }
     },
     methods: {
+        ...mapActions('reservation', ['setDeparture', 'setArrival']),
         async submitNow() {
             const formObserver = await this.$refs.formObserver.validate();
 
             if (!formObserver) {
-                return;
+                return false;
             }
 
-            const servicesInput = document.createElement('input');
-            servicesInput.type = 'text';
-            servicesInput.name = 'services[]';
-            servicesInput.value = ['dog', 'cat'];
-            document.getElementById('formObserver').appendChild(servicesInput);
+            const quoteFormData = {
+                departure_place: this.departure_place,
+                departure_meeting_point: this.departure_meeting_point,
+                departure_date: this.departure_date,
+                departure_hour: this.departure_hour,
+                departure_ticket_number: this.departure_ticket_number,
+                arrival_place: this.arrival_place,
+                arrival_meeting_point: this.arrival_meeting_point,
+                arrival_date: this.arrival_date,
+                arrival_hour: this.arrival_hour,
+                arrival_ticket_number: this.arrival_ticket_number,
+                services: [],
+            };
 
-            this.$refs.form.submit();
+            localStorage.setItem('quoteFormData', JSON.stringify(quoteFormData));
 
-            console.log('its good !');
+            return true;
+        },
+        emitDeparture() {
+            if (this.departure_place && this.departure_date && this.departure_hour) {
+                this.setDeparture({ place: this.departure_place, date: this.departure_date, hour: this.departure_hour });
+            }
+        },
+        emitArrival() {
+            if (this.arrival_place && this.arrival_date && this.arrival_hour) {
+                this.setArrival({ place: this.arrival_place, date: this.arrival_date, hour: this.arrival_hour });
+            }
         }
     },
     watch: {
         departure_place(val) {
             this.departure_meeting_point = this.meetingPoints[this.stations.indexOf(val)];
+            this.emitDeparture();
         },
         arrival_place(val) {
             this.arrival_meeting_point = this.meetingPoints[this.stations.indexOf(val)];
+            this.emitArrival()
+        },
+        departure_date() {
+            this.emitDeparture();
+        },
+        arrival_date() {
+            this.emitArrival();
+        },
+        departure_hour() {
+            this.emitDeparture();
+        },
+        arrival_hour() {
+            this.emitArrival();
         }
     }
 }

@@ -19,13 +19,12 @@ Route::get('/', function () {
     return view('website', compact('services'));
 });
 
-Route::get('/reservation', function () {
+Route::get('/votre-reservation', function () {
     $services = ExtraService::all();
     return view('reservation', compact('services'));
 })->name('reservation');
 
 Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
 Route::resource('clients', 'ClientController');
-Route::post('/clients/reserve', 'ClientController@reserve')->name('reserve');
+Route::resource('reservations', 'ReservationController');

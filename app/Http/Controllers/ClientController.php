@@ -8,6 +8,16 @@ use App\Client;
 class ClientController extends Controller
 {
     /**
+     * Create a new controller instance.
+     *
+     * @return void
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+    
+    /**
      * Display a listing of the resource.
      *
      * @return \Illuminate\Http\Response
@@ -82,17 +92,5 @@ class ClientController extends Controller
     public function destroy($id)
     {
         //
-    }
-
-    /**
-     * Reservation creation.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function reserve(Request $request)
-    {
-        dd($request);
-        return view('auth.login');
     }
 }

@@ -27,14 +27,14 @@ Vue.use(BootstrapVue);
 
 Vue.use(BVConfigPlugin, {
     BFormDatepicker: {
-        "labelNoDateSelected": 'Aucune date sélectionnée',
+        "labelNoDateSelected": 'Aucune date',
         "labelHelp": "Utilisez les touches fléchées pour parcourir les dates du calendrier",
         "labelTodayButton": "Aujourd'hui",
         "labelResetButton": "Effacer",
         "labelCloseButton": "Fermer"
     },
     BFormTimepicker: {
-        "labelNoTimeSelected": 'Aucune heure sélectionnée', 
+        "labelNoTimeSelected": 'Aucune heure', 
         "labelNowButton": 'Maintenant',
         "labelResetButton": 'Effacer',
         "labelCloseButton": 'Fermer'
@@ -45,6 +45,9 @@ Vue.use(BVConfigPlugin, {
 import { ValidationProvider, ValidationObserver, extend, localize } from 'vee-validate';
 import fr from 'vee-validate/dist/locale/fr.json';
 import * as rules from 'vee-validate/dist/rules';
+import Vue from 'vue';
+import moment from 'moment';
+moment.locale('fr');
 
 localize('fr', fr);
 for (let [rule, validation] of Object.entries(rules)) {
@@ -61,6 +64,9 @@ Vue.config.devtools = true;
 // Website
 Vue.component('welcome-form', require('./components/WelcomeForm.vue').default);
 Vue.component('reservation-manager', require('./components/ReservationManager.vue').default);
+Vue.component('reservations-list', require('./components/ReservationsList.vue').default);
+
+Vue.prototype.$moment = moment;
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
