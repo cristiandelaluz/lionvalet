@@ -17,6 +17,5 @@
 @include('website.aboutus')
 @include('website.timetable')
 @include('website.services')
-{{-- @include('website.contact') --}}
 @include('layouts.footer')
 @endsection

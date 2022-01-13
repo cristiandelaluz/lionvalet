@@ -1,10 +1,11 @@
 <template>
     <fragment>
-        <div class="col-md-12 col-lg-9 mb-3">
+        <div class="col-md-12 col-lg-9">
             <reservation-form
-                ref="reservationForm" />
+                ref="reservationForm"
+                @isForwarding="(flag) => isForwarding = flag" />
             <reservation-services
-                :services="services" />
+                :services="extraServices" />
         </div>
         <div class="col-md-12 col-lg-3">
             <div class="sticky-element" style="top: 5rem;">
@@ -19,22 +20,27 @@
                                 <p class="m-0 font-weight-bold text-primary">Votre trajet</p>
                                 <div v-if="departure && arrival">
                                     <p class="small font-weight-bold text-secondary mb-1">PARKING + VOITURIER</p>
-                                    <p class="mb-1">{{ departure.place }} <i v-if="departureOnNigth" class="fas fa-moon"></i></p>
+                                    <p class="mb-0 mt-2"><i v-if="departureOnNigth" class="fas fa-moon"></i></p>
+                                    <p class="mb-1">{{ departure.place }}</p>
                                     <span class="my-3 h5 text-secondary"><i class="fas fa-arrow-down"></i></span>
-                                    <p class="mb-0">{{ arrival.place }} <i v-if="arrivalOnNigth" class="fas fa-moon"></i></p>
+                                    <p class="mb-0 mt-2"><i v-if="arrivalOnNigth" class="fas fa-moon"></i></p>
+                                    <p class="mb-0">{{ arrival.place }}</p>
                                     <hr class="border-info my-2" />
                                     <p class="m-0 font-weight-bold text-secondary">Total: {{ totalParking }} €</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="selectedServices.length" class="card border-info" style="border-radius: 1rem !important;">
+                        <div v-if="selectedServices.length || isForwarding" class="card border-info" style="border-radius: 1rem !important;">
                             <div class="card-body p-2">
                                 <p class="m-0 font-weight-bold text-primary">Vos options</p>
-                                <div v-if="selectedServices.length">
+                                <div v-if="isForwarding">
+                                    <p class="m-0 text-warning">Acheminement <strong>+{{ forwardingPrice }}€</strong></p>
+                                </div>
+                                <div v-if="selectedServices.length || isForwarding">
                                     <p class="m-0" v-for="service of selectedServices" :key="service.id">{{ service.name }}</p>
                                     <hr class="border-info my-2" />
-                                    <p class="m-0 font-weight-bold text-secondary">Total: {{ totalServices }} €</p>
+                                    <p class="m-0 font-weight-bold text-secondary">Total: {{ isForwarding ? totalServices + forwardingPrice : totalServices }} €</p>
                                 </div>
                             </div>
                         </div>
@@ -43,7 +49,7 @@
                 <div class="card border-0 mt-3 shadow">
                     <div class="card-body">
                         <h6>Montant Total</h6>
-                        <h3 id="bill-total" class="text-secondary text-center m-0">{{ totalServices + totalParking }} €</h3>
+                        <h3 id="bill-total" class="text-secondary text-center m-0">{{ isForwarding ? (totalServices + totalParking + forwardingPrice) :  totalServices + totalParking}} €</h3>
                     </div>
                 </div>
                 <div class="text-center">
@@ -80,11 +86,21 @@
                 default: 0,
             },
         },
+        created() {
+            for (const service of this.services) {
+                const handled = {...service};
+                handled.price = parseFloat(handled.price);
+                this.extraServices.push(handled);
+            }
+        },
         data: () => ({
+            extraServices: [],
             daysNumber: 0,
             totalParking: 0,
             departureOnNigth: false,
             arrivalOnNigth: false,
+            isForwarding: false,
+            forwardingPrice: 45,
         }),
         computed: {
             ...mapGetters('reservation', ['selectedServices', 'departure', 'arrival', 'dateAreReady']),
@@ -111,11 +127,12 @@
                     return;
                 }
 
-                window.axios.post('/reservations', quoteFormData).then(() => {
+                window.axios.post('/reservations', quoteFormData).then((response) => {
+                    const {reservation} = response.data;
                     localStorage.setItem('pendingQuote', false);
                     localStorage.removeItem('quote');
                     localStorage.removeItem('quoteFormData');
-                    window.location.href = '/reservations';
+                    window.location.href = `/reservations/payment/${reservation.id}`;
                 });
             },
             getTotal() {

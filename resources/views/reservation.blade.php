@@ -9,5 +9,4 @@
         <reservation-manager :services="{{ $services }}" :is-auth="{{ $check }}" />
     </div>
 </div>
-@include('layouts.footer')
 @endsection

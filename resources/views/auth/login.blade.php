@@ -79,5 +79,4 @@
         </div>
     </div>
 </div>
-@include('layouts.footer-fixed')
 @endsection

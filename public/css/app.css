@@ -18,6 +18,8 @@ button {
 
 .section__content {
   padding-top: 5.5rem !important;
+  margin-bottom: auto;
+  padding-bottom: 2rem;
 }
 
 .bg-primary-400 {
@@ -110,6 +112,57 @@ select.custom-select {
 
 .modal-footer {
   border-top: 0 !important;
+}
+
+.index {
+  position: relative;
+  background: #11998e;
+  /* fallback for old browsers */
+  /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(to left, #38ef7d, #11998e);
+  /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+#app,
+main,
+body,
+html {
+  height: 100%;
+  margin: 0;
+}
+
+.btn--round {
+  border-radius: 50px;
+  padding: 1rem;
+}
+
+.footer {
+  background: #0c0c0c;
+  color: #868688;
+  padding: 1.5rem 3rem 1.5rem 3rem;
+}
+
+.driver {
+  height: 55rem;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+select {
+  background: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0Ljk1IDEwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9LmNscy0ye2ZpbGw6IzQ0NDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmFycm93czwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB3aWR0aD0iNC45NSIgaGVpZ2h0PSIxMCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxLjQxIDQuNjcgMi40OCAzLjE4IDMuNTQgNC42NyAxLjQxIDQuNjciLz48cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMy41NCA1LjMzIDIuNDggNi44MiAxLjQxIDUuMzMgMy41NCA1LjMzIi8+PC9zdmc+) no-repeat;
+  background-position: right 0.3rem top;
+  /* Change the px value here to change the distance */
+  -moz-appearance: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (min-width: 768px) {
+  .index {
+    height: 100%;
+  }
 }
 
 /*!

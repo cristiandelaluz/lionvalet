@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <b-overlay :show="loading" rounded="sm">
     <b-tabs content-class="mt-3" justified pills>
       <b-tab title="Réservations à venir" active>
         <div :class="`d-flex card py-3 px-4 ${!index ? '' : 'mt-3'}`" style="border-radius: 1rem !important;" v-for="(reservation, index) of upcoming" :key="reservation.id">
@@ -12,12 +12,24 @@
                 Info du client
               </b-button>
               <h3 class="text-secondary m-0">{{ reservation.total + reservation.services_total }} €</h3>
+              <button v-if="reservation.status === RESERVATION_PENDING && !isAdmin" class="btn btn-sm btn-warning ml-3" @click="goToPay(reservation.id)">Payer</button>
+              <button v-if="reservation.status === RESERVATION_PAID && checkAnnulation(reservation) && !isAdmin" @click="refund(reservation)" class="btn btn-sm btn-secondary ml-3">Annuler</button>
             </div>
           </div>
           <div class="row mt-3">
+            <div class="col-12" v-if="reservation.status === RESERVATION_PENDING">
+              <b-alert show variant="warning">
+                Cette réservation n'a pas été payée.
+              </b-alert>
+            </div>
+            <div class="col-12" v-if="reservation.status === RESERVATION_REFUNDED">
+              <b-alert show variant="secondary">
+                Cette réservation a été annulée et elle será remboursée.
+              </b-alert>
+            </div>
             <div class="col-sm-12 col-md-6">
               <p class="text-primary mb-0"><strong>Départ</strong></p>
-              <p class="mb-0">Rendez vous à <strong>{{ reservation.departure_meeting_point }}</strong> le <strong>{{ formatDate(reservation.departure_date) }}</strong> à <strong>{{ reservation.departure_hour }}</strong></p>
+              <p class="mb-0">Rendez vous: <strong>{{ reservation.departure_meeting_point }}</strong> le <strong>{{ formatDate(reservation.departure_date) }}</strong> à <strong>{{ reservation.departure_hour }}</strong></p>
               <p class="mb-0">Numéro de vol: 
                 <strong v-if="reservation.departure_ticket_number">{{ reservation.departure_ticket_number }}</strong>
                 <span v-else>Non rempli</span>
@@ -26,7 +38,7 @@
 
             <div class="col-sm-12 col-md-6">
               <p class="text-secondary mb-0"><strong>Arrivée</strong></p>
-              <p class="mb-0">Rendez vous à <strong>{{ reservation.arrival_meeting_point }}</strong> le <strong>{{ formatDate(reservation.arrival_date) }}</strong> à <strong>{{ reservation.arrival_hour }}</strong></p>
+              <p class="mb-0">Rendez vous: <strong>{{ reservation.arrival_meeting_point }}</strong> le <strong>{{ formatDate(reservation.arrival_date) }}</strong> à <strong>{{ reservation.arrival_hour }}</strong></p>
               <p class="mb-0">Numéro de vol: 
                 <strong v-if="reservation.arrival_ticket_number">{{ reservation.arrival_ticket_number }}</strong>
                 <span v-else>Non rempli</span>
@@ -60,9 +72,14 @@
             </div>
           </div>
           <div class="row mt-3">
+            <div class="col-12" v-if="reservation.status === RESERVATION_PENDING">
+              <b-alert show variant="danger">
+                Cette réservation n'a pas été effectuée
+              </b-alert>
+            </div>
             <div class="col-sm-12 col-md-6">
               <p class="text-primary mb-0"><strong>Départ</strong></p>
-              <p class="mb-0">Rendez vous à <strong>{{ reservation.departure_meeting_point }}</strong> le <strong>{{ formatDate(reservation.departure_date) }}</strong> à <strong>{{ reservation.departure_hour }}</strong></p>
+              <p class="mb-0">Rendez vous: <strong>{{ reservation.departure_meeting_point }}</strong> le <strong>{{ formatDate(reservation.departure_date) }}</strong> à <strong>{{ reservation.departure_hour }}</strong></p>
               <p class="mb-0">Numéro de vol: 
                 <strong v-if="reservation.departure_ticket_number">{{ reservation.departure_ticket_number }}</strong>
                 <span v-else>Non rempli</span>
@@ -71,7 +88,7 @@
 
             <div class="col-sm-12 col-md-6">
               <p class="text-secondary mb-0"><strong>Arrivée</strong></p>
-              <p class="mb-0">Rendez vous à <strong>{{ reservation.arrival_meeting_point }}</strong> le <strong>{{ formatDate(reservation.arrival_date)  }}</strong> à <strong>{{ reservation.arrival_hour }}</strong></p>
+              <p class="mb-0">Rendez vous: <strong>{{ reservation.arrival_meeting_point }}</strong> le <strong>{{ formatDate(reservation.arrival_date)  }}</strong> à <strong>{{ reservation.arrival_hour }}</strong></p>
               <p class="mb-0">Numéro de vol: 
                 <strong v-if="reservation.arrival_ticket_number">{{ reservation.arrival_ticket_number }}</strong>
                 <span v-else>Non rempli</span>
@@ -101,11 +118,12 @@
         <p>E-mail : <strong>{{ clientInfo.user.email }}</strong></p>
       </div>
     </b-modal>
-  </div>
+  </b-overlay>
 </template>
 
 <script>
 import moment from 'moment';
+import { RESERVATION_PENDING, RESERVATION_PAID, RESERVATION_REFUNDED } from './../constants';
 
 export default {
   props: {
@@ -123,6 +141,10 @@ export default {
     done: [],
     clientInfo: null,
     modalShow: false,
+    RESERVATION_PENDING,
+    RESERVATION_PAID,
+    RESERVATION_REFUNDED,
+    loading: false,
   }),
   created() {
     this.checkReservations();
@@ -148,6 +170,46 @@ export default {
     showInfoClient(client) {
       this.clientInfo = client;
       this.modalShow = true;
+    },
+    goToPay(id) {
+      window.location.href = `/reservations/payment/${id}`;
+    },
+    checkAnnulation(reservation) {
+      if (!reservation) {
+        return false;
+      }
+
+      if (!reservation.extra_services) {
+        return false;
+      }
+
+      return reservation.extra_services.find(x => x.name === 'Annulation')
+    },
+    refund(reservation) {
+      this.loading = true;
+      window.axios.post('/refund', {
+        id: reservation.id,
+        payment_method_id: reservation.payment_method_id
+      })
+      .then(() => {
+        const toUpdate = this.reservations.find(x => x.id === reservation.id);
+        toUpdate.status = RESERVATION_REFUNDED;
+        this.$bvToast.toast('La reservation à été annulée', {
+          title: 'Annulation',
+          variant: 'success',
+          solid: true
+        });
+      })
+      .catch(() => {
+        this.$bvToast.toast("Une erreur s'est produite, réessayez plus tard", {
+          title: 'Annulation',
+          variant: 'danger',
+          solid: true
+        });
+      })
+      .finally(() => {
+        this.loading = false;
+      });
     }
   }
 }

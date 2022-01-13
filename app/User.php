@@ -6,12 +6,14 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
+use Laravel\Cashier\Billable;
 use App\Client;
 
 class User extends Authenticatable
 {
     use HasRoles;
     use Notifiable;
+    use Billable;
 
     /**
      * The attributes that are mass assignable.

@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Providers\PricingProvider;
+use App\Providers\ReservationStatusProvider;
+use Cartalyst\Stripe\Stripe;
 
 class ReservationController extends Controller
 {
@@ -38,24 +40,16 @@ class ReservationController extends Controller
                 ->with('client.user')
                 ->where('departure_date','>=',$dateMin)
                 ->where('departure_date','<=',$dateMax)
+                ->orderByDesc('created_at')
                 ->get();
         } else {
             $reservations = Reservation::with('extraServices')
                 ->where('client_id', Auth::user()->client->id)
+                ->orderByDesc('created_at')
                 ->get();
         }
 
         return view('reservations', compact('reservations'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -125,6 +119,12 @@ class ReservationController extends Controller
                 $reservation->services_total = $services_total[0]->total;
             }
 
+            // forwarding
+            if (isset($request->is_forwarding)) {
+                $reservation->total += PricingProvider::FORWARDING_PRICE;
+                $reservation->is_forwarding = true;
+            }
+
             $reservation->save();
 
             return response()->json([
@@ -132,56 +132,91 @@ class ReservationController extends Controller
                 'message' => 'OK',
                 'reservation' => $reservation
             ]);
-        } catch (\Throwable $th) {
+        } catch (Exception $e) {
             return response()->json([
                 'status' => 400,
-                'message' => $th
+                'message' => $e
             ]);
         }
     }
 
     /**
-     * Display the specified resource.
+     * Payment with Stripe
      *
-     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function payment($id)
     {
-        //
+        $reservation = Reservation::with('extraServices')->find($id);
+        $total = $reservation->total;
+
+        if (count($reservation->extraServices)) {
+            foreach ($reservation->extraServices as $extraService) {
+                $total += $extraService->price;
+            }
+        }
+
+        return view('payment', compact('reservation', 'total'));
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
+     * Complete the purchase and update the reservation
+     * 
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        //
+    public function purchase(Request $request) {
+        try {
+            $payment_method_id = $request->id;
+            $amount = $request->amount;
+            $reservation_id = $request->reservation_id;
+            $user = $request->user();
+            $payment = $user->charge($amount * 100, $payment_method_id, ['currency' => 'eur']);
+            $reservation = Reservation::find($reservation_id);
+            $reservation->payment_method_id = $payment->id;
+            $reservation->status = ReservationStatusProvider::PAID;
+            $reservation->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'OK',
+                'reservation' => $reservation
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $e
+            ]);
+        }
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
+    public function refund(Request $request)
     {
-        //
-    }
+        try {
+            $reservationId = $request->id;
+            $payment_method_id = $request->payment_method_id;
+            $reservation = Reservation::with('extraServices')->find($reservationId );
+            $total = $reservation->total;
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
+            if (count($reservation->extraServices)) {
+                foreach ($reservation->extraServices as $extraService) {
+                    $total += $extraService->price;
+                }
+            }
+
+            $stripe = new Stripe(env('STRIPE_SECRET'));
+            $refund = $stripe->refunds()->create($payment_method_id, $total - 7, ['reason' => 'requested_by_customer']);
+            $reservation->status = ReservationStatusProvider::REFUNDED;
+            $reservation->save();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'OK'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 400,
+                'message' => $e
+            ]);
+        }
     }
 }

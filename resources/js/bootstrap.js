@@ -20,6 +20,7 @@ try {
  */
 
 window.axios = require('axios');
+window.constants = require('./constants');
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.axios.defaults.headers.common['X-CSRF-TOKEN'] = document.getElementById('csrf-token').getAttribute('content');

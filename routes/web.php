@@ -1,23 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
 use App\ExtraService;
 
 Route::get('/', function () {
     $services = ExtraService::all();
     return view('website', compact('services'));
 });
+
+Route::get('/reservations/payment/{id}', 'ReservationController@payment');
+Route::post('/purchase', 'ReservationController@purchase');
+Route::post('/refund', 'ReservationController@refund');
 
 Route::get('/votre-reservation', function () {
     $services = ExtraService::all();

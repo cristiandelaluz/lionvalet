@@ -170,7 +170,10 @@ export default {
             this.arrival_date = content.arrival_date;
             this.arrival_hour = content.arrival_hour;
             this.arrival_ticket_number = content.arrival_ticket_number;
+            this.is_forwarding = content.is_forwarding;
         }
+
+        this.isThereForwarding(this.departure_place, this.arrival_place);
     },
     computed: {
         today() {
@@ -216,6 +219,7 @@ export default {
                 arrival_date: this.arrival_date,
                 arrival_hour: this.arrival_hour,
                 arrival_ticket_number: this.arrival_ticket_number,
+                is_forwarding: this.is_forwarding,
                 services: [],
             };
 
@@ -232,16 +236,29 @@ export default {
             if (this.arrival_place && this.arrival_date && this.arrival_hour) {
                 this.setArrival({ place: this.arrival_place, date: this.arrival_date, hour: this.arrival_hour });
             }
+        },
+        isThereForwarding(departure, arrival) {
+            if (!departure) {
+                return false;
+            }
+
+            if (!arrival) {
+                return false;
+            }
+
+            this.$emit('isForwarding', departure !== arrival);
         }
     },
     watch: {
         departure_place(val) {
             this.departure_meeting_point = this.meetingPoints[this.stations.indexOf(val)];
             this.emitDeparture();
+            this.isThereForwarding(val, this.arrival_place);
         },
         arrival_place(val) {
             this.arrival_meeting_point = this.meetingPoints[this.stations.indexOf(val)];
-            this.emitArrival()
+            this.emitArrival();
+            this.isThereForwarding(this.departure_place, val);
         },
         departure_date() {
             this.emitDeparture();

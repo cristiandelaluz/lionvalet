@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,13 +23,13 @@
     <div id="app">
         @include('layouts.navbar')
 
-        <main>
+        <main class="main">
             @yield('content')
         </main>
     </div>
 </body>
 
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
-<script src="js/app.js"></script>
+<script src="/js/app.js"></script>
 @stack('scripts')
 </html>

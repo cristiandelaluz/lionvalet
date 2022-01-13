@@ -7,7 +7,7 @@
     </p> --}}
 
     <div class="d-flex align-items-center">
-      <img src="{{ asset('assets/car-driver.svg') }}" width="40%">
+      <img src="{{ asset('assets/car-driver.svg') }}" width="100%" class="d-lg-block d-md-none d-sm-none d-none">
       <div>
         <h5 class="font-weight-bold">Qu’est-ce que LionValet ?</h5>
 

@@ -62,13 +62,19 @@
                             <label for="sex" class="col-md-4 col-form-label text-md-right">Sex</label>
                             <div class="col-md-6">
                                 <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="man" name="sex" class="custom-control-input" value="1">
+                                    <input type="radio" id="man" name="sex" class="custom-control-input" value="1" required>
                                     <label class="custom-control-label" for="man">Homme</label>
                                 </div>
                                 <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="woman" name="sex" class="custom-control-input" value="0">
+                                    <input type="radio" id="woman" name="sex" class="custom-control-input" value="0" required>
                                     <label class="custom-control-label" for="woman">Femme</label>
                                 </div>
+
+                                @error('sex')
+                                    <span class="invalid-feedback" role="alert">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
                         </div>
 
@@ -135,5 +141,4 @@
         </div>
     </div>
 </div>
-@include('layouts.footer-fixed')
 @endsection

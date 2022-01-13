@@ -30,11 +30,15 @@ const pendingQuote = JSON.parse(localStorage.getItem('pendingQuote'));
 const quoteFormData = JSON.parse(localStorage.getItem('quoteFormData'));
 
 if (pendingQuote) {
-    window.axios.post('/reservations', quoteFormData).then(() => {
+    window.axios.post('/reservations', quoteFormData).then((response) => {
+        console.log(response);
+        const {data} = response;
+        const {reservation} = data;
         localStorage.setItem('pendingQuote', false);
         localStorage.removeItem('quote');
         localStorage.removeItem('quoteFormData');
-        location.reload();
+        // location.reload();
+        window.location.href = `/reservations/payment/${reservation.id}`;
     });
 }
 </script>

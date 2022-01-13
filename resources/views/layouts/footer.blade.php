@@ -1,3 +1,3 @@
 <footer class="footer">
-  Lionvalet {{ date("Y") }} © All Rights Reserved. Made with <i class="fas fa-heart text-danger"></i> by <span class="text-primary font-weight-bold">DIO</span>
+  Lionvalet {{ date("Y") }} Made by <span class="text-primary font-weight-bold"><a href="https://www.linkedin.com/in/cristian-de-la-luz-a59744147/" target="_blank">Cristian De La Luz</a></span>
 </footer>

@@ -21,4 +21,10 @@ export const formData = {
       'Dépose minutes P1',
       'Parking Express'
   ],
+  is_forwarding: false,
 }
+
+// Reservations status
+export const RESERVATION_PENDING = 'PENDING';
+export const RESERVATION_PAID = 'PAID';
+export const RESERVATION_REFUNDED = 'REFUNDED';

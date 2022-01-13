@@ -13,7 +13,7 @@
           Notre service de nuit fonctionne de 00h00 à 6h00 du lundi au dimanche nous vous accompagnons toujours avec un service de proximité adapté à vos besoins. Nos voituriers sont formés et possède une expérience qui fait de notre offre le meilleur du marché. 
         </p>
       </div>
-      <img src="{{ asset('assets/time-management.svg') }}" width="35%">
+      <img src="{{ asset('assets/time-management.svg') }}" width="100%" class="d-lg-block d-md-none d-sm-none d-none">
     </div>
   </div>
 </section>

@@ -48,6 +48,11 @@ class ExtraServicesSeeder extends Seeder
                 'price' => 310,
                 'img_name' => 'motor.svg'
             ],
+            [
+                'name' => 'Annulation', 
+                'price' => 7,
+                'img_name' => 'refund.png'
+            ],
         ]);
     }
 }

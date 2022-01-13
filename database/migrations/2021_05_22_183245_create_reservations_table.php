@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Providers\ReservationStatusProvider;
 
 class CreateReservationsTable extends Migration
 {
@@ -25,8 +26,11 @@ class CreateReservationsTable extends Migration
             $table->date('arrival_date');
             $table->time('arrival_hour', 0);
             $table->string('arrival_ticket_number', 20)->nullable();
+            $table->boolean('is_forwarding')->default(false);
             $table->float('total', 8, 2)->default(0);
             $table->float('services_total', 8, 2)->default(0);
+            $table->string('status', 15)->default(ReservationStatusProvider::PENDING);
+            $table->string('payment_method_id')->nullable();
             $table->foreignId('client_id')->constrained();
             $table->timestamps();
         });
